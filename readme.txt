@@ -18,18 +18,19 @@ Seamlessly integrates into your WordPress dashboard interface. Safe, secure, & e
 
 * Download and install using the built in WordPress plugin installer.
 * Activate in the "Plugins" area of your admin by clicking the "Activate" link.
-* No further setup or configuration is necessary.
+* Visit: Tools > Keyring
+* Add a New Service
+* Authorize Publishiza
 
 == Frequently Asked Questions ==
 
 = Why would I need this? =
 
-You like tweetstorming, but also want to keep your contentin your blog.
+You really like tweetstorming, but you also want to archive your content in your blog.
 
 == Screenshots ==
-1. "Type" column in "Posts" screen.
-2. "Post Type" interface in "Quick Edit".
-3. "Post Type" interface in "Edit Post" screen.
+1. Publish box
+2. Keyring
 
 == Changelog ==
 

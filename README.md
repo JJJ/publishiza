@@ -10,7 +10,9 @@ Compose and publish a Tweetstorm, all from inside your WordPress.
 
 * Download and install using the built in WordPress plugin installer.
 * Activate in the "Plugins" area of your admin by clicking the "Activate" link.
-* No further setup or configuration is necessary.
+* Visit: Tools > Keyring
+* Add a New Service
+* Authorize Publishiza
 
 # FAQ
 
