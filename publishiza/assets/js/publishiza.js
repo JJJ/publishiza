@@ -1,11 +1,11 @@
-jQuery( document ).ready( function( $ ) {
+jQuery( function( $ ) {
 	var $publish_btn  = $( '#publish' ),
-		$edit         = $( '#edit-publishiza' ),
-		$save         = $( '#save-publishiza' ),
-		$cancel       = $( '#cancel-publishiza' ),
-		$select       = $( '#publishiza-select' ),
-		$display      = $( '#publishiza-display' ),
-		$publish_text = $publish_btn.val();
+	    $edit         = $( '#edit-publishiza' ),
+	    $save         = $( '#save-publishiza' ),
+	    $cancel       = $( '#cancel-publishiza' ),
+	    $select       = $( '#publishiza-select' ),
+	    $display      = $( '#publishiza-display' ),
+	    $publish_text = $publish_btn.val();
 
 	$( '.misc-pub-section.curtime.misc-pub-section-last' ).removeClass( 'misc-pub-section-last' );
 
