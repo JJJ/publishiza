@@ -93,7 +93,8 @@ function publishiza_post_to_twitter( $post = null ) {
 
 	// Process post content into Tweets
 	$original_poo = $post->post_content;
-	$stripped     = wp_strip_all_tags( $original_poo, true );
+	$decoded      = html_entity_decode( $original_poo, ENT_QUOTES, 'UTF-8' );
+	$stripped     = wp_strip_all_tags( $decoded, true );
 	$split        = wordwrap( $stripped, $length, "\n", false );
 	$trimmed      = array_map( 'trim', explode( "\n", $split ) );
 	$tweets       = array_filter( $trimmed );
