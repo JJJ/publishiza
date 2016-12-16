@@ -78,7 +78,6 @@ function publishiza_post_to_twitter( $post = null ) {
 	// Set the Twitter token
 	$service->token = reset( $tokens );
 
-
 	// Storm settings
 	$length  = apply_filters( 'publishiza_storm_length',   120 );
 	$control = apply_filters( 'publishiza_storm_control',  html_entity_decode( '&#x1f4a9;&#x1f329;', 0, 'UTF-8') );
