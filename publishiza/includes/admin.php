@@ -19,15 +19,21 @@ function publishiza_admin_assets() {
  * @since 1.0.0
  */
 function publishiza_post_submitbox_start() {
+	$post  = get_post();
+	$datef = __( 'M j, Y @ H:i', 'publishiza' );
 
 	// Can publishiza
-	$can_publishiza = true; ?>
+	$status = ( 'publish' === $post->post_status );
+	$meta   = get_post_meta( $post->ID, 'publishiza', true );
+	$text   = empty( $meta )
+		? esc_html__( 'off', 'publishiza' )
+		: date( $datef, $meta['time'] ); ?>
 
 	<div class="misc-pub-section misc-pub-section-last publishiza">
 		<label for="publishiza"><?php esc_html_e( 'Publishiza', 'publishiza' ); ?></label>
-		<span id="publishiza-display"><?php esc_html_e( 'off', 'publishiza' ); ?></span>
+		<span id="publishiza-display"><?php echo esc_html( $text ); ?></span>
 
-		<?php if ( true === $can_publishiza ) : ?>
+		<?php if ( empty( $status ) && ( false !== $meta ) ) : ?>
 
 			<a href="#" id="edit-publishiza" class="hide-if-no-js"><?php esc_html_e( 'Edit', 'publishiza' ); ?></a>
 			<div id="publishiza-select">
@@ -39,7 +45,7 @@ function publishiza_post_submitbox_start() {
 				<a href="#" id="cancel-publishiza" class="hide-if-no-js"><?php esc_html_e( 'Cancel', 'publishiza' ); ?></a>
 			</div><?php
 
-			wp_nonce_field( 'publishiza-selector', 'publishiza-nonce-select' );
+			//wp_nonce_field( 'publishiza-select', 'publishiza-nonce' );
 
 		endif;
 

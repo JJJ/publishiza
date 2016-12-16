@@ -29,19 +29,28 @@ function publishiza_register_post_meta() {
  */
 function publishiza_publish_post( $post_id = 0, $post = null ) {
 
+	// Bail if not Publishiza'ing
+	if ( empty( $_POST['publishiza'] ) ) {
+		return;
+	}
+
 	// Bail if already Publishizaed
-	if ( get_post_meta( $post_id, 'publishiza' ) ) {
+	if ( get_post_meta( $post_id, 'publishiza', true ) ) {
+		return;
+	}
+
+	// Bail if nonce fails
+	if ( ! wp_verify_nonce( 'publishiza-nonce', 'publishiza-select' ) ) {
 		//return;
 	}
 
-	// Publishiza to twitter
+	// Publishiza & get response
 	$response = publishiza_post_to_twitter( $post );
-
-	// Get response from Twitter
 
 	// Save response to prevent
 	add_post_meta( $post_id, 'publishiza', array(
-		'time' => time()
+		'time'  => time(),
+		'start' => $response
 	) );
 }
 
@@ -72,48 +81,79 @@ function publishiza_post_to_twitter( $post = null ) {
 
 	// Not authed
 	if ( empty( $tokens ) ) {
-		return;
+		return false;
 	}
 
-	// Set the Twitter token
-	$service->token = reset( $tokens );
-
 	// Storm settings
-	$length  = apply_filters( 'publishiza_storm_length',   120 );
+	$sleep   = apply_filters( 'publishiza_storm_sleep',    2   );
+	$length  = apply_filters( 'publishiza_storm_length',   119 );
 	$control = apply_filters( 'publishiza_storm_control',  html_entity_decode( '&#x1f4a9;&#x1f329;', 0, 'UTF-8') );
 	$ndash   = apply_filters( 'publishiza_storm_divider',  html_entity_decode( '&ndash;',  0, 'UTF-8' ) );
 	$ellip   = apply_filters( 'publishiza_storm_ellipsis', html_entity_decode( '&hellip;', 0, 'UTF-8' ) );
 
-	// Process post content
+	// Process post content into Tweets
 	$original_poo = $post->post_content;
-	$stripped     = strip_tags( $original_poo );
-	$split        = wordwrap( $stripped, $length );
-	$tweets       = explode( "\n", $split );
+	$stripped     = wp_strip_all_tags( $original_poo, true );
+	$split        = wordwrap( $stripped, $length, "\n", false );
+	$trimmed      = array_map( 'trim', explode( "\n", $split ) );
+	$tweets       = array_filter( $trimmed );
 	$count        = count( $tweets );
 	$responses    = array();
 
-	// Storm
-	foreach ( $tweets as $index => $tweet ) {
-		$position = (int) $index + 1;
-		$prefix   = apply_filters( 'publishiza_storm_prefix', "{$control} {$position}/{$count} {$ndash} " );
-		$text     = "{$prefix}{$tweet}";
+	// Connections
+	foreach ( $tokens as $token ) {
 
-		// Maybe append an ellipsis
-		if ( $position !== $count ) {
-			$text = "{$text}{$ellip}";
+		// Set the token
+		$service->token = $token;
+		$first          = false;
+
+		// Storm
+		foreach ( $tweets as $index => $tweet ) {
+
+			// Build the prefix
+			$position = (int) $index + 1;
+			$prefix   = apply_filters( 'publishiza_storm_prefix', "{$control} {$position}/{$count} {$ndash} " );
+			$text     = "{$prefix}{$tweet}";
+
+			// Maybe append an ellipsis
+			if ( $position !== $count ) {
+				$text = "{$text}{$ellip}";
+			}
+
+			// Get request body
+			$body = array(
+				'status'    => $text,
+				'trim_user' => 1
+			);
+
+			// Maybe in response to the first ID
+			if ( ( $position > 1 ) && ! empty( $first ) ) {
+				$body['in_reply_to_status_id'] = (int) $first;
+			}
+
+			// Send update to Twitter
+			$response = $service->request( 'https://api.twitter.com/1.1/statuses/update.json', array(
+				'method' => 'POST',
+				'body'   => $body
+			) );
+
+			// If first response, check for error or set first for storm
+			if ( 1 === $position ) {
+
+				// Error!
+				if ( is_a( $response, 'Keyring_Error' ) ) {
+					return false;
+				}
+
+				// Setup storm
+				$first       = $response->id;
+				$responses[] = $response;
+			}
+
+			// Wait to avoid being throttled
+			sleep( $sleep );
 		}
-
-		// Push to Twitter
-		$responses[] = $service->request( 'https://api.twitter.com/1.1/statuses/update.json', array(
-			'method' => 'POST',
-			'body'   => array(
-				'status' => $text
-			)
-		) );
-
-		// Wait, to avoid being throttled
-		sleep( 2 );
 	}
 
-	return true;
+	return $first;
 }
