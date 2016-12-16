@@ -132,8 +132,8 @@ function publishiza_post_to_twitter( $post = null ) {
 			}
 
 			// Send update to Twitter
-			$response = $service->request( 'https://api.twitter.com/1.1/statuses/update.json', array(
-				'method' => 'POST',
+			$response = $service->request( $service->update_url, array(
+				'method' => $service->update_method,
 				'body'   => $body
 			) );
 
