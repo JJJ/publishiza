@@ -96,7 +96,7 @@ function publishiza_get_asset_version() {
 function publishiza_activation_redirect( $plugin = '' ) {
 
 	// Bail if not this plugin
-	if( $plugin !== plugin_basename( __FILE__ ) ) {
+	if ( $plugin !== plugin_basename( __FILE__ ) ) {
 		return;
 	}
 
@@ -105,3 +105,4 @@ function publishiza_activation_redirect( $plugin = '' ) {
 	wp_safe_redirect( $redirect_to );
 	exit;
 }
+add_action( 'activated_plugin', 'publishiza_activation_redirect' );

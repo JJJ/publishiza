@@ -3,9 +3,6 @@
 // Exit if accessed directly
 defined( 'ABSPATH' ) || exit;
 
-// Redirect to Keyring on activation
-add_action( 'activated_plugin', 'publishiza_activation_redirect' );
-
 // Register post meta
 add_action( 'plugins_loaded', 'publishiza_register_post_meta' );
 
