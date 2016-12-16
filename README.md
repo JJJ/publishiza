@@ -5,7 +5,9 @@ Compose and publish a Tweetstorm, all from inside your WordPress.
 
 * Seamlessly integrates into your WordPress dashboard interface
 * Safe, secure, & efficient
-	
+
+Publishiza includes Keyring, a great foundation by my pal by Beau Lebens.
+
 # Installation
 
 * Download and install using the built in WordPress plugin installer.
