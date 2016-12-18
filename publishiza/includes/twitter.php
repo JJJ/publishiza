@@ -57,8 +57,7 @@ function publishiza_publish_post( $post_id = 0, $post = null ) {
 /**
  * Maybe Publishiza a WordPress post to Twitter
  *
- * Checks for valid service, tokens, and tweets first, and bails if there is a
- * problem.
+ * Check for valid service/tokens/tweets – bail if there is a problem
  *
  * @since 1.0.0
  *
@@ -66,9 +65,7 @@ function publishiza_publish_post( $post_id = 0, $post = null ) {
  */
 function publishiza_maybe_post_to_twitter( $post = null ) {
 
-	/**
-	 * @var Keyring_Service_Twitter $service
-	 */
+	// Look for Publishiza connection
 	$service = Keyring::get_service_by_name( 'publishiza' );
 
 	// Bail if no connection to Twitter
@@ -76,7 +73,7 @@ function publishiza_maybe_post_to_twitter( $post = null ) {
 		return;
 	}
 
-	//$token = $service->build_token_meta();
+	// Look for auth tokens
 	$tokens = Keyring::get_token_store()->get_tokens( array(
 		'service' => 'publishiza',
 		'user_id' => $post->post_author
@@ -88,7 +85,7 @@ function publishiza_maybe_post_to_twitter( $post = null ) {
 	}
 
 	// Process post content into Tweets
-	$tweets = publishiza_get_tweets_from_text( $post->post_content );
+	$tweets = publishiza_get_tweets_from_text( $post->post_content, $post );
 
 	// Bail if no tweets
 	if ( empty( $tweets ) ) {
@@ -112,7 +109,7 @@ function publishiza_maybe_post_to_twitter( $post = null ) {
  * @param string $text
  * @return array
  */
-function publishiza_get_tweets_from_text( $text = '' ) {
+function publishiza_get_tweets_from_text( $text = '', $text_object = null ) {
 
 	/**
 	 * Filter length of individual tweets
@@ -131,13 +128,13 @@ function publishiza_get_tweets_from_text( $text = '' ) {
 	/**
 	 * Filter the plain-text, so it can be stormed
 	 *
-	 * @Since 1.1.0
+	 * @since 1.1.0
 	 *
 	 * @param string $stripped Stripped text
 	 * @param string $text     Original text
 	 * @return string
 	 */
-	$filtered = (string) apply_filters( 'publishiza_storm_text', $stripped, $text );
+	$filtered = (string) apply_filters( 'publishiza_storm_text', $stripped, $text, $text_object );
 
 	// Wrap text blob into a managable array
 	$split   = wordwrap( $filtered, $length, "\n", false );
@@ -253,4 +250,36 @@ function publishiza_post_tweets_to_twitter( $args = array() ) {
 
 	// Return ID of first tweet
 	return $first;
+}
+
+/**
+ * Maybe append the short-link to the end of the blog post content
+ *
+ * @since 1.1.0
+ *
+ * @param string  $text
+ * @param string  $original
+ * @param WP_Post $object
+ *
+ * @return string
+ */
+function publishiza_append_short_link( $text = '', $original = '', $object = null ) {
+
+	// Bail if no text or not a post object
+	if ( empty( $text ) || ! is_a( $object, 'WP_Post' ) ) {
+		return $text;
+	}
+
+	// Bail if turned off
+	if ( ! apply_filters( 'publishiza_append_short_link', false, $object ) ) {
+		return $text;
+	}
+
+	// Get the short link
+	$shorty = wp_get_shortlink( $post->ID, 'post', false );
+
+	// Return text, maybe with appended short-link
+	return ! empty( $shorty )
+		? "{$text} - {$shorty}"
+		: $text;
 }

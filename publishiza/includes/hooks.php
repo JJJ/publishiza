@@ -14,3 +14,6 @@ add_action( 'post_submitbox_misc_actions', 'publishiza_post_submitbox_start' );
 
 // Admin styling
 add_action( 'admin_head', 'publishiza_admin_assets' );
+
+// Maybe append short-link
+add_filter( 'publishiza_storm_text', 'publishiza_append_short_link', 10, 3 );
