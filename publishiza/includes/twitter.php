@@ -116,7 +116,7 @@ function publishiza_post_to_twitter( $post = null ) {
 			$position = (int) $index + 1;
 			$prefix   = apply_filters( 'publishiza_storm_prefix', "{$control}{$position}/{$count} {$ndash} " );
 			$text     = "{$prefix}{$tweet}";
- 
+
 			// Maybe append an ellipsis
 			if ( ! empty( $ellip ) && ( $position !== $count ) ) {
 				$text = "{$text}{$ellip}";
