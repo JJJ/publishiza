@@ -45,7 +45,7 @@ function publishiza_publish_post( $post_id = 0, $post = null ) {
 	}
 
 	// Publishiza & get response
-	$response = publishiza_post_to_twitter( $post );
+	$response = publishiza_maybe_post_to_twitter( $post );
 
 	// Save response to prevent
 	add_post_meta( $post_id, 'publishiza', array(
@@ -55,13 +55,16 @@ function publishiza_publish_post( $post_id = 0, $post = null ) {
 }
 
 /**
- * Publishiza a WordPress post to Twitter
+ * Maybe Publishiza a WordPress post to Twitter
+ *
+ * Checks for valid service, tokens, and tweets first, and bails if there is a
+ * problem.
  *
  * @since 1.0.0
  *
  * @param WP_Post $post
  */
-function publishiza_post_to_twitter( $post = null ) {
+function publishiza_maybe_post_to_twitter( $post = null ) {
 
 	/**
 	 * @var Keyring_Service_Twitter $service
@@ -79,38 +82,111 @@ function publishiza_post_to_twitter( $post = null ) {
 		'user_id' => $post->post_author
 	) );
 
-	// Not authed
+	// Bail if not authed
 	if ( empty( $tokens ) ) {
 		return false;
 	}
 
-	// Storm settings
-	$sleep   = apply_filters( 'publishiza_storm_sleep',    2   );
-	$length  = apply_filters( 'publishiza_storm_length',   119 );
-	$control = apply_filters( 'publishiza_storm_control',  html_entity_decode( '&#x1f4a9;&#x1f329; ', 0, 'UTF-8') );
-	$ndash   = apply_filters( 'publishiza_storm_divider',  html_entity_decode( '&ndash;',  0, 'UTF-8' ) );
-	$ellip   = apply_filters( 'publishiza_storm_ellipsis', html_entity_decode( '&hellip;', 0, 'UTF-8' ) );
-
 	// Process post content into Tweets
-	$original_poo = $post->post_content;
-	$decoded      = html_entity_decode( $original_poo, ENT_QUOTES, 'UTF-8' );
-	$stripped     = wp_strip_all_tags( $decoded, true );
-	$split        = wordwrap( $stripped, $length, "\n", false );
-	$trimmed      = array_map( 'trim', explode( "\n", $split ) );
-	$tweets       = array_filter( $trimmed );
-	$count        = count( $tweets );
-	$responses    = array();
-	$first        = false;
+	$tweets = publishiza_get_tweets_from_text( $post->post_content );
 
-	// Connections
-	foreach ( $tokens as $token ) {
+	// Bail if no tweets
+	if ( empty( $tweets ) ) {
+		return false;
+	}
+
+	// Try to post tweets to Twitter
+	return publishiza_post_tweets_to_twitter( array(
+		'tweets'  => $tweets,
+		'service' => $service,
+		'tokens'  => $tokens
+	) );
+}
+
+/**
+ * Return array of strings for more predictable fitment into Twitter's current
+ * 140 character restriction.
+ *
+ * @since 1.1.0
+ *
+ * @param string $text
+ * @return array
+ */
+function publishiza_get_tweets_from_text( $text = '' ) {
+
+	/**
+	 * Filter length of individual tweets
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int 119 Maximum length of each tweet
+	 */
+	$length = apply_filters( 'publishiza_storm_length', 119 );
+
+	// Format text blob for word wrapping
+	$decoded  = html_entity_decode( $text, ENT_QUOTES, 'UTF-8' );
+	$stripped = wp_strip_all_tags( $decoded, true );
+
+	// Wrap text blob into a managable array
+	$split   = wordwrap( $stripped, $length, "\n", false );
+	$trimmed = array_map( 'trim', explode( "\n", $split ) );
+	$tweets  = array_filter( $trimmed );
+
+	/**
+	 * Filter array of tweets, processed from $text
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param array  $tweets Array of all tweets
+	 * @param string $text   The original text
+	 * @param int    $length The maximum length of each tweet
+	 */
+	return (array) apply_filters( 'publishiza_format_post_content_for_twitter', $tweets, $text, $length );
+}
+
+/**
+ * Sends multiple POST requests to the Twitter API, one for each tweet in the
+ * array of tweets passed
+ *
+ * @since 1.1.0
+ *
+ * @param array $tweets
+ * @param Keyring_Service $service
+ *
+ * @return boolean
+ */
+function publishiza_post_tweets_to_twitter( $args = array() ) {
+
+	// Parse args
+	$r = wp_parse_args( $args, array(
+		'tweets'  => array(),
+		'service' => null,
+		'tokens'  => null
+	) );
+
+	// Bail if nothing to do
+	if ( empty( $r['tweets'] ) || empty( $r['tokens'] ) || empty( $r['service'] ) ) {
+		return false;
+	}
+
+	// Storm settings
+	$sleep     = apply_filters( 'publishiza_storm_sleep',    2 );
+	$control   = apply_filters( 'publishiza_storm_control',  html_entity_decode( '&#x1f4a9;&#x1f329; ', 0, 'UTF-8' ) );
+	$ndash     = apply_filters( 'publishiza_storm_divider',  html_entity_decode( '&ndash;',             0, 'UTF-8' ) );
+	$ellip     = apply_filters( 'publishiza_storm_ellipsis', html_entity_decode( '&hellip;',            0, 'UTF-8' ) );
+	$count     = count( $r['tweets'] );
+	$responses = array();
+	$first     = false;
+
+	// Loop through connections (multiple accounts can storm simultaneously)
+	foreach ( $r['tokens'] as $token ) {
 
 		// Set the token
-		$service->token     = $token;
-		$previous_status_id = false;
+		$r['service']->token = $token;
+		$previous_status_id  = false;
 
 		// Storm
-		foreach ( $tweets as $index => $tweet ) {
+		foreach ( $r['tweets'] as $index => $tweet ) {
 
 			// Build the prefix
 			$position = (int) $index + 1;
@@ -134,8 +210,8 @@ function publishiza_post_to_twitter( $post = null ) {
 			}
 
 			// Send update to Twitter
-			$response = $service->request( $service->update_url, array(
-				'method' => $service->update_method,
+			$response = $r['service']->request( $r['service']->update_url, array(
+				'method' => $r['service']->update_method,
 				'body'   => $body
 			) );
 
@@ -162,5 +238,6 @@ function publishiza_post_to_twitter( $post = null ) {
 		}
 	}
 
+	// Return ID of first tweet
 	return $first;
 }
