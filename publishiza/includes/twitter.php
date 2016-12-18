@@ -4,7 +4,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Register the postmeta key
+ * Register the post-meta key
  *
  * @since 1.0.0
  */
@@ -120,15 +120,27 @@ function publishiza_get_tweets_from_text( $text = '' ) {
 	 * @since 1.0.0
 	 *
 	 * @param int 119 Maximum length of each tweet
+	 * @return int
 	 */
-	$length = apply_filters( 'publishiza_storm_length', 119 );
+	$length = (int) apply_filters( 'publishiza_storm_length', 119 );
 
 	// Format text blob for word wrapping
 	$decoded  = html_entity_decode( $text, ENT_QUOTES, 'UTF-8' );
 	$stripped = wp_strip_all_tags( $decoded, true );
 
+	/**
+	 * Filter the plain-text, so it can be stormed
+	 *
+	 * @Since 1.1.0
+	 *
+	 * @param string $stripped Stripped text
+	 * @param string $text     Original text
+	 * @return string
+	 */
+	$filtered = (string) apply_filters( 'publishiza_storm_text', $stripped, $text );
+
 	// Wrap text blob into a managable array
-	$split   = wordwrap( $stripped, $length, "\n", false );
+	$split   = wordwrap( $filtered, $length, "\n", false );
 	$trimmed = array_map( 'trim', explode( "\n", $split ) );
 	$tweets  = array_filter( $trimmed );
 
@@ -140,6 +152,7 @@ function publishiza_get_tweets_from_text( $text = '' ) {
 	 * @param array  $tweets Array of all tweets
 	 * @param string $text   The original text
 	 * @param int    $length The maximum length of each tweet
+	 * @return array
 	 */
 	return (array) apply_filters( 'publishiza_format_post_content_for_twitter', $tweets, $text, $length );
 }
