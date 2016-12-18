@@ -87,7 +87,7 @@ function publishiza_post_to_twitter( $post = null ) {
 	// Storm settings
 	$sleep   = apply_filters( 'publishiza_storm_sleep',    2   );
 	$length  = apply_filters( 'publishiza_storm_length',   119 );
-	$control = apply_filters( 'publishiza_storm_control',  html_entity_decode( '&#x1f4a9;&#x1f329;', 0, 'UTF-8') );
+	$control = apply_filters( 'publishiza_storm_control',  html_entity_decode( '&#x1f4a9;&#x1f329; ', 0, 'UTF-8') );
 	$ndash   = apply_filters( 'publishiza_storm_divider',  html_entity_decode( '&ndash;',  0, 'UTF-8' ) );
 	$ellip   = apply_filters( 'publishiza_storm_ellipsis', html_entity_decode( '&hellip;', 0, 'UTF-8' ) );
 
@@ -114,11 +114,11 @@ function publishiza_post_to_twitter( $post = null ) {
 
 			// Build the prefix
 			$position = (int) $index + 1;
-			$prefix   = apply_filters( 'publishiza_storm_prefix', "{$control} {$position}/{$count} {$ndash} " );
+			$prefix   = apply_filters( 'publishiza_storm_prefix', "{$control}{$position}/{$count} {$ndash} " );
 			$text     = "{$prefix}{$tweet}";
-
+ 
 			// Maybe append an ellipsis
-			if ( $position !== $count ) {
+			if ( ! empty( $ellip ) && ( $position !== $count ) ) {
 				$text = "{$text}{$ellip}";
 			}
 
