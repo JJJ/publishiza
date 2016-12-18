@@ -100,13 +100,14 @@ function publishiza_post_to_twitter( $post = null ) {
 	$tweets       = array_filter( $trimmed );
 	$count        = count( $tweets );
 	$responses    = array();
+	$first        = false;
 
 	// Connections
 	foreach ( $tokens as $token ) {
 
 		// Set the token
-		$service->token = $token;
-		$first          = false;
+		$service->token     = $token;
+		$previous_status_id = false;
 
 		// Storm
 		foreach ( $tweets as $index => $tweet ) {
@@ -128,8 +129,8 @@ function publishiza_post_to_twitter( $post = null ) {
 			);
 
 			// Maybe in response to the first ID
-			if ( ( $position > 1 ) && ! empty( $first ) ) {
-				$body['in_reply_to_status_id'] = (int) $first;
+			if ( ( $position > 1 ) && ! empty( $previous_status_id ) ) {
+				$body['in_reply_to_status_id'] = (int) $previous_status_id;
 			}
 
 			// Send update to Twitter
@@ -138,18 +139,23 @@ function publishiza_post_to_twitter( $post = null ) {
 				'body'   => $body
 			) );
 
-			// If first response, check for error or set first for storm
-			if ( 1 === $position ) {
-
-				// Error!
-				if ( is_a( $response, 'Keyring_Error' ) ) {
-					return false;
-				}
-
-				// Setup storm
-				$first       = $response->id;
-				$responses[] = $response;
+			// Error!
+			if ( is_a( $response, 'Keyring_Error' ) ) {
+				return false;
 			}
+
+			// Setup storm
+			if ( isset( $response->id ) ) {
+				$previous_status_id = $response->id;
+
+				// Set first response ID
+				if ( empty( $first ) && ( 1 === $position ) ) {
+					$first = $response->id;
+				}
+			}
+
+			// Add response to responses array (@todo: save for debug?)
+			$responses[] = $response;
 
 			// Wait to avoid being throttled
 			sleep( $sleep );
