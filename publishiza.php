@@ -44,14 +44,17 @@ function publishiza_plugins_loaded() {
 	require_once $plugin_path . 'includes/twitter.php';
 
 	// Service
-	require_once $plugin_path . 'keyring/includes/services/core/http-basic.php';
-	require_once $plugin_path . 'keyring/includes/services/core/oauth1.php';
-	require_once $plugin_path . 'keyring/includes/services/core/oauth2.php';
-	require_once $plugin_path . 'keyring/includes/services/extended/twitter.php';
+	if ( ! defined( 'KEYRING__VERSION' ) ) {
+		require_once $plugin_path . 'keyring/includes/services/core/http-basic.php';
+		require_once $plugin_path . 'keyring/includes/services/core/oauth1.php';
+		require_once $plugin_path . 'keyring/includes/services/core/oauth2.php';
+		require_once $plugin_path . 'keyring/includes/services/extended/twitter.php';
+	}
 	require_once $plugin_path . 'includes/service.php';
 
+
 	// Load translations
-	load_plugin_textdomain( 'publishiza', false, $plugin_path . 'assets/lang/' );	
+	load_plugin_textdomain( 'publishiza', false, $plugin_path . 'assets/lang/' );
 }
 add_action( 'plugins_loaded', 'publishiza_plugins_loaded' );
 

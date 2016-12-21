@@ -4,7 +4,9 @@
 defined( 'ABSPATH' ) || exit;
 
 // Require parent service
-require_once dirname( dirname( __FILE__ ) ) . '/keyring/includes/services/extended/twitter.php';
+if ( ! class_exists( 'Keyring_Service_Twitter' ) ) {
+	require_once dirname( dirname( __FILE__ ) ) . '/keyring/includes/services/extended/twitter.php';
+}
 
 /**
  * Twitter service definition for Publishiza. Clean implementation of OAuth1
@@ -51,7 +53,7 @@ class Keyring_Service_Publishiza extends Keyring_Service_Twitter {
 	}
 
 	/**
-	 * 
+	 *
 	 * @since 1.0.0
 	 */
 	function basic_ui() {
