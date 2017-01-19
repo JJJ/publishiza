@@ -151,11 +151,11 @@ abstract class Keyring_Service {
 		// Handle actually saving credentials
 		if ( isset( $_POST['api_key'] ) && isset( $_POST['api_secret'] ) ) {
 			// Store credentials against this service
-			$this->update_credentials( array(
+			$this->update_credentials( apply_filters( 'keyring_' . $this->get_name() . '_basic_ui_save_credentials', array(
 				'app_id' => ( ! empty( $_POST['app_id'] ) ? stripslashes( $_POST['app_id'] ) : '' ),
 				'key'    => ( ! empty( $_POST['api_key'] ) ? stripslashes( $_POST['api_key'] ) : '' ),
 				'secret' => ( ! empty( $_POST['api_secret'] ) ? stripslashes( $_POST['api_secret'] ) : '' )
-			) );
+			) ) );
 			echo '<div class="updated"><p>' . __( 'Credentials saved.', 'keyring' ) . '</p></div>';
 		}
 
@@ -326,5 +326,5 @@ $keyring_services = glob( dirname( __FILE__ ) . "/includes/services/core/*.php" 
 $keyring_services = array_merge( $keyring_services, glob( dirname( __FILE__ ) . "/includes/services/extended/*.php" ) );
 $keyring_services = apply_filters( 'keyring_services', $keyring_services );
 foreach ( $keyring_services as $keyring_service )
-	require_once $keyring_service;
+	require $keyring_service;
 unset( $keyring_services, $keyring_service );
