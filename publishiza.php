@@ -16,7 +16,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Include the User Profiles files
+ * Include the Keyring files early files
  *
  * @since 1.0.0
  */
@@ -33,6 +33,11 @@ function _publishiza() {
 }
 _publishiza();
 
+/**
+ * Include the rest of the files on plugins_loaded
+ *
+ * @since 1.0.0
+ */
 function publishiza_plugins_loaded() {
 
 	// Get the plugin path
@@ -50,8 +55,9 @@ function publishiza_plugins_loaded() {
 		require_once $plugin_path . 'keyring/includes/services/core/oauth2.php';
 		require_once $plugin_path . 'keyring/includes/services/extended/twitter.php';
 	}
-	require_once $plugin_path . 'includes/service.php';
 
+	// Included after above services
+	require_once $plugin_path . 'includes/service.php';
 
 	// Load translations
 	load_plugin_textdomain( 'publishiza', false, $plugin_path . 'assets/lang/' );
