@@ -28,8 +28,7 @@ No. All of WordPress's core database tables remain untouched.
 
 ### Where can I get support?
 
-* Basic: https://wordpress.org/support/plugin/publishiza/
-* Priority: https://chat.flox.io/support/channels/publishiza/
+* Here on GitHub: https://github.com/JJJ/publishiza/
 
 ### Can I contribute?
 
